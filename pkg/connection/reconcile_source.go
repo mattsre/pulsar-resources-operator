@@ -47,9 +47,9 @@ func (r *PulsarSourceReconciler) Observe(ctx context.Context) error {
 	r.log.V(1).Info("Start Observe")
 
 	sourcesList := &resourcev1alpha1.PulsarSourceList{}
-	if err := r.conn.client.List(ctx, sourcesList, client.InNamespace(r.conn.connection.Namespace),
+	if err := r.conn.client.List(ctx, sourcesList,
 		client.MatchingFields(map[string]string{
-			".spec.connectionRef.name": r.conn.connection.Name,
+			".spec.connectionRef.name": r.conn.connection.Namespace + "/" + r.conn.connection.Name,
 		})); err != nil {
 		return fmt.Errorf("list sources [%w]", err)
 	}

@@ -9,11 +9,30 @@ The `PulsarTenant` resource defines a tenant in a Pulsar cluster. It allows you 
 | Field | Description | Required |
 |-------|-------------|----------|
 | `name` | The tenant name. | Yes |
-| `connectionRef` | Reference to the PulsarConnection resource used to connect to the Pulsar cluster for this tenant. | Yes |
+| `connectionRef` | Reference to the PulsarConnection resource. See [Connection Reference](#connection-reference) below. | Yes |
 | `adminRoles` | List of authentication principals allowed to manage the tenant. | No |
 | `allowedClusters` | List of clusters the tenant is allowed to access. If not specified, tenant has access to all clusters. | No |
 | `lifecyclePolicy` | Determines whether to keep or delete the Pulsar tenant when the Kubernetes resource is deleted. Options: `CleanUpAfterDeletion`, `KeepAfterDeletion`. | No |
 | `geoReplicationRefs` | List of references to PulsarGeoReplication resources, used to grant permissions to the tenant for geo-replication. | No |
+
+### Connection Reference
+
+The `connectionRef` field specifies which `PulsarConnection` resource to use:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| `name` | Name of the PulsarConnection resource. | Yes |
+| `namespace` | Namespace of the PulsarConnection resource. If not specified, uses the same namespace as this resource. | No |
+
+Cross-namespace example:
+
+```yaml
+connectionRef:
+  name: shared-pulsar-connection
+  namespace: pulsar-connections  # Reference a connection in another namespace
+```
+
+See [Cross-Namespace References](pulsar_connection.md#cross-namespace-references) for more details.
 
 ## Allowed Clusters vs GeoReplicationRefs
 

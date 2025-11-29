@@ -15,7 +15,6 @@
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,11 +26,13 @@ type PulsarGeoReplicationSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// ConnectionRef is the reference to the source PulsarConnection
-	ConnectionRef corev1.LocalObjectReference `json:"connectionRef"`
+	// ConnectionRef is the reference to the source PulsarConnection.
+	// Use the optional Namespace field to reference a PulsarConnection in a different namespace.
+	ConnectionRef PulsarConnectionRef `json:"connectionRef"`
 
-	// DestinationConnectionRef is the connection reference to the remote cluster
-	DestinationConnectionRef corev1.LocalObjectReference `json:"destinationConnectionRef"`
+	// DestinationConnectionRef is the connection reference to the remote cluster.
+	// Use the optional Namespace field to reference a PulsarConnection in a different namespace.
+	DestinationConnectionRef PulsarConnectionRef `json:"destinationConnectionRef"`
 
 	// +kubebuilder:validation:Enum=CleanUpAfterDeletion;KeepAfterDeletion
 	// +optional
@@ -93,7 +94,7 @@ type ClusterInfo struct {
 	// Name is the pulsar cluster name
 	Name string `json:"name,omitempty"`
 	// ConnectionRef is the connection reference that can connect to the pulsar cluster
-	ConnectionRef corev1.LocalObjectReference `json:"connectionRef"`
+	ConnectionRef PulsarConnectionRef `json:"connectionRef"`
 }
 
 // ClusterParamsOverride allows overriding specific parameters when creating/updating cluster info

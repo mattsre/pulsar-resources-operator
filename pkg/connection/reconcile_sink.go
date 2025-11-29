@@ -47,9 +47,9 @@ func (r *PulsarSinkReconciler) Observe(ctx context.Context) error {
 	r.log.V(1).Info("Start Observe")
 
 	sinksList := &resourcev1alpha1.PulsarSinkList{}
-	if err := r.conn.client.List(ctx, sinksList, client.InNamespace(r.conn.connection.Namespace),
+	if err := r.conn.client.List(ctx, sinksList,
 		client.MatchingFields(map[string]string{
-			".spec.connectionRef.name": r.conn.connection.Name,
+			".spec.connectionRef.name": r.conn.connection.Namespace + "/" + r.conn.connection.Name,
 		})); err != nil {
 		return fmt.Errorf("list sinks [%w]", err)
 	}

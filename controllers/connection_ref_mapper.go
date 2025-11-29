@@ -17,7 +17,6 @@ package controllers
 import (
 	"context"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -25,21 +24,27 @@ import (
 	pulsarv1alpha1 "github.com/streamnative/pulsar-resources-operator/api/v1alpha1"
 )
 
+// ConnectionRefInfo holds the connection reference name and namespace
+type ConnectionRefInfo struct {
+	Name      string
+	Namespace string
+}
+
 // PulsarConnectionRefMapper maps resource requests to PulsarConnection
 type PulsarConnectionRefMapper struct {
 }
 
 // Map maps resource object to PulsarConnection request
 func (p *PulsarConnectionRefMapper) Map(object client.Object) []reconcile.Request {
-	ref := getConnectionRef(object)
-	if ref == nil {
+	info := getConnectionRefInfo(object)
+	if info == nil {
 		return nil
 	}
 	return []reconcile.Request{
 		{
 			NamespacedName: types.NamespacedName{
-				Namespace: object.GetNamespace(),
-				Name:      ref.Name,
+				Namespace: info.Namespace,
+				Name:      info.Name,
 			},
 		},
 	}
@@ -49,21 +54,39 @@ func (p *PulsarConnectionRefMapper) Map(object client.Object) []reconcile.Reques
 
 // ConnectionRefMapper maps resource object to PulsarConnection request
 func ConnectionRefMapper(ctx context.Context, object client.Object) []reconcile.Request {
-	ref := getConnectionRef(object)
-	if ref == nil {
+	info := getConnectionRefInfo(object)
+	if info == nil {
 		return nil
 	}
 	return []reconcile.Request{
 		{
 			NamespacedName: types.NamespacedName{
-				Namespace: object.GetNamespace(),
-				Name:      ref.Name,
+				Namespace: info.Namespace,
+				Name:      info.Name,
 			},
 		},
 	}
 }
 
-func getConnectionRef(object client.Object) *corev1.LocalObjectReference {
+// getConnectionRefInfo returns the connection reference info including namespace.
+// If the ConnectionRef.Namespace is not specified, it defaults to the object's namespace.
+func getConnectionRefInfo(object client.Object) *ConnectionRefInfo {
+	ref := getConnectionRef(object)
+	if ref == nil {
+		return nil
+	}
+	ns := ref.Namespace
+	if ns == "" {
+		ns = object.GetNamespace()
+	}
+	return &ConnectionRefInfo{
+		Name:      ref.Name,
+		Namespace: ns,
+	}
+}
+
+// getConnectionRef returns the connection reference for the given object
+func getConnectionRef(object client.Object) *pulsarv1alpha1.PulsarConnectionRef {
 	switch v := object.(type) {
 	case *pulsarv1alpha1.PulsarTenant:
 		return &v.Spec.ConnectionRef
@@ -88,4 +111,20 @@ func getConnectionRef(object client.Object) *corev1.LocalObjectReference {
 	default:
 		return nil
 	}
+}
+
+// GetConnectionNamespace returns the effective namespace for the connection reference.
+// If ConnectionRefNamespace is set, it returns that; otherwise returns the object's namespace.
+func GetConnectionNamespace(object client.Object) string {
+	info := getConnectionRefInfo(object)
+	if info == nil {
+		return object.GetNamespace()
+	}
+	return info.Namespace
+}
+
+// MakeConnectionRefIndexKey creates an index key that includes both name and namespace
+// for cross-namespace connection reference lookups.
+func MakeConnectionRefIndexKey(name, namespace string) string {
+	return namespace + "/" + name
 }

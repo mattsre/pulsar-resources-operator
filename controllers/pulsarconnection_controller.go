@@ -126,34 +126,50 @@ func (r *PulsarConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *PulsarConnectionReconciler) SetupWithManager(mgr ctrl.Manager, options controller.Options) error {
+	// Helper function to get the effective connection namespace
+	getEffectiveNamespace := func(objectNs, refNs string) string {
+		if refNs != "" {
+			return refNs
+		}
+		return objectNs
+	}
+
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarTenant{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			tenant := object.(*resourcev1alpha1.PulsarTenant)
+			ns := getEffectiveNamespace(tenant.Namespace, tenant.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarTenant).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(tenant.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
 	}
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarNamespace{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			namespace := object.(*resourcev1alpha1.PulsarNamespace)
+			ns := getEffectiveNamespace(namespace.Namespace, namespace.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarNamespace).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(namespace.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
 	}
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarTopic{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			topic := object.(*resourcev1alpha1.PulsarTopic)
+			ns := getEffectiveNamespace(topic.Namespace, topic.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarTopic).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(topic.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
 	}
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarPermission{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			permission := object.(*resourcev1alpha1.PulsarPermission)
+			ns := getEffectiveNamespace(permission.Namespace, permission.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarPermission).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(permission.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
@@ -161,8 +177,10 @@ func (r *PulsarConnectionReconciler) SetupWithManager(mgr ctrl.Manager, options 
 
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarGeoReplication{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			geo := object.(*resourcev1alpha1.PulsarGeoReplication)
+			ns := getEffectiveNamespace(geo.Namespace, geo.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarGeoReplication).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(geo.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
@@ -170,8 +188,10 @@ func (r *PulsarConnectionReconciler) SetupWithManager(mgr ctrl.Manager, options 
 
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarGeoReplication{}, ".spec.destinationConnectionRef.name",
 		func(object client.Object) []string {
+			geo := object.(*resourcev1alpha1.PulsarGeoReplication)
+			ns := getEffectiveNamespace(geo.Namespace, geo.Spec.DestinationConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarGeoReplication).Spec.DestinationConnectionRef.Name,
+				MakeConnectionRefIndexKey(geo.Spec.DestinationConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
@@ -179,8 +199,10 @@ func (r *PulsarConnectionReconciler) SetupWithManager(mgr ctrl.Manager, options 
 
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarPackage{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			pkg := object.(*resourcev1alpha1.PulsarPackage)
+			ns := getEffectiveNamespace(pkg.Namespace, pkg.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarPackage).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(pkg.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
@@ -188,8 +210,10 @@ func (r *PulsarConnectionReconciler) SetupWithManager(mgr ctrl.Manager, options 
 
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarFunction{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			fn := object.(*resourcev1alpha1.PulsarFunction)
+			ns := getEffectiveNamespace(fn.Namespace, fn.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarFunction).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(fn.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
@@ -197,8 +221,10 @@ func (r *PulsarConnectionReconciler) SetupWithManager(mgr ctrl.Manager, options 
 
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarSink{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			sink := object.(*resourcev1alpha1.PulsarSink)
+			ns := getEffectiveNamespace(sink.Namespace, sink.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarSink).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(sink.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
@@ -206,16 +232,20 @@ func (r *PulsarConnectionReconciler) SetupWithManager(mgr ctrl.Manager, options 
 
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarSource{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			source := object.(*resourcev1alpha1.PulsarSource)
+			ns := getEffectiveNamespace(source.Namespace, source.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarSource).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(source.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err
 	}
 	if err := mgr.GetCache().IndexField(context.TODO(), &resourcev1alpha1.PulsarNSIsolationPolicy{}, ".spec.connectionRef.name",
 		func(object client.Object) []string {
+			policy := object.(*resourcev1alpha1.PulsarNSIsolationPolicy)
+			ns := getEffectiveNamespace(policy.Namespace, policy.Spec.ConnectionRef.Namespace)
 			return []string{
-				object.(*resourcev1alpha1.PulsarNSIsolationPolicy).Spec.ConnectionRef.Name,
+				MakeConnectionRefIndexKey(policy.Spec.ConnectionRef.Name, ns),
 			}
 		}); err != nil {
 		return err

@@ -262,6 +262,61 @@ spec:
   tlsTrustCertsFilePath: /certs/ca.crt
 ```
 
+## Cross-Namespace References
+
+Pulsar resources (such as `PulsarTenant`, `PulsarNamespace`, `PulsarTopic`, etc.) can reference a `PulsarConnection` in a different namespace. This enables centralized connection management where a platform team maintains shared connections in a dedicated namespace.
+
+### Usage
+
+To reference a `PulsarConnection` in a different namespace, specify the `namespace` field in the `connectionRef`:
+
+```yaml
+apiVersion: resource.streamnative.io/v1alpha1
+kind: PulsarTenant
+metadata:
+  name: my-tenant
+  namespace: team-a
+spec:
+  name: my-tenant
+  connectionRef:
+    name: shared-pulsar-connection
+    namespace: pulsar-connections  # References connection in another namespace
+```
+
+If `namespace` is omitted, the resource's own namespace is used (backward-compatible behavior):
+
+```yaml
+apiVersion: resource.streamnative.io/v1alpha1
+kind: PulsarTenant
+metadata:
+  name: my-tenant
+  namespace: team-a
+spec:
+  name: my-tenant
+  connectionRef:
+    name: local-connection  # Uses PulsarConnection in "team-a" namespace
+```
+
+### Requirements
+
+1. **Cluster-scoped operator deployment**: The operator must be deployed with cluster-wide permissions (the default). Cross-namespace references require the operator to watch and access resources across namespaces.
+
+2. **RBAC**: The operator's `ClusterRole` must have permissions to get/list/watch `PulsarConnection` resources in all relevant namespaces. The default installation includes these permissions.
+
+### Performance Considerations
+
+- Cross-namespace references use efficient index-based lookups and do not significantly impact performance.
+- The operator caches all watched resources in memory. In very large clusters (10,000+ Pulsar resources), memory usage scales with the total number of resources across all watched namespaces.
+- For deployments that need to limit resource consumption, you can configure the operator to watch only specific namespaces. In this mode, cross-namespace references are only supported within the set of watched namespaces.
+
+### Security Considerations
+
+Cross-namespace references allow resources in one namespace to use credentials defined in another namespace's `PulsarConnection`. Consider your security requirements:
+
+- Use Kubernetes RBAC to control which teams/namespaces can create Pulsar resources
+- Consider using admission webhooks or policies to restrict which `PulsarConnection` resources can be referenced
+- In multi-tenant environments, evaluate whether cross-namespace references align with your isolation requirements
+
 ## Common Operations
 
 - Create: `kubectl apply -f connection.yaml`

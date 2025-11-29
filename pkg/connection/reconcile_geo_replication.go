@@ -50,17 +50,17 @@ func makeGeoReplicationReconciler(r *PulsarConnectionReconciler) reconciler.Inte
 // Observe checks the updates of object
 func (r *PulsarGeoReplicationReconciler) Observe(ctx context.Context) error {
 	geoList := &resourcev1alpha1.PulsarGeoReplicationList{}
-	if err := r.conn.client.List(ctx, geoList, client.InNamespace(r.conn.connection.Namespace),
+	if err := r.conn.client.List(ctx, geoList,
 		client.MatchingFields(map[string]string{
-			".spec.connectionRef.name": r.conn.connection.Name,
+			".spec.connectionRef.name": r.conn.connection.Namespace + "/" + r.conn.connection.Name,
 		})); err != nil {
 		return fmt.Errorf("list GeoReplication [%w]", err)
 	}
 
 	if len(geoList.Items) == 0 {
-		if err := r.conn.client.List(ctx, geoList, client.InNamespace(r.conn.connection.Namespace),
+		if err := r.conn.client.List(ctx, geoList,
 			client.MatchingFields(map[string]string{
-				".spec.destinationConnectionRef.name": r.conn.connection.Name,
+				".spec.destinationConnectionRef.name": r.conn.connection.Namespace + "/" + r.conn.connection.Name,
 			})); err != nil {
 			return fmt.Errorf("list GeoReplication [%w]", err)
 		}

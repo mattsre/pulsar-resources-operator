@@ -50,7 +50,8 @@ type PulsarTopicSpec struct {
 
 	// ConnectionRef is the reference to the PulsarConnection resource
 	// used to connect to the Pulsar cluster for this topic.
-	ConnectionRef corev1.LocalObjectReference `json:"connectionRef"`
+	// Use the optional Namespace field to reference a PulsarConnection in a different namespace.
+	ConnectionRef PulsarConnectionRef `json:"connectionRef"`
 
 	// LifecyclePolicy determines whether to keep or delete the Pulsar topic
 	// when the Kubernetes resource is deleted.

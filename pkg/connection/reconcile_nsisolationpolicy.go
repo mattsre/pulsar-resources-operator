@@ -47,9 +47,9 @@ func (r *PulsarNSIsolationPolicyReconciler) Observe(ctx context.Context) error {
 	r.log.V(1).Info("Start Observe")
 
 	nsIsolationPolicyList := &resourcev1alpha1.PulsarNSIsolationPolicyList{}
-	if err := r.conn.client.List(ctx, nsIsolationPolicyList, client.InNamespace(r.conn.connection.Namespace),
+	if err := r.conn.client.List(ctx, nsIsolationPolicyList,
 		client.MatchingFields(map[string]string{
-			".spec.connectionRef.name": r.conn.connection.Name,
+			".spec.connectionRef.name": r.conn.connection.Namespace + "/" + r.conn.connection.Name,
 		})); err != nil {
 		return fmt.Errorf("list ns-isolation-policies [%w]", err)
 	}

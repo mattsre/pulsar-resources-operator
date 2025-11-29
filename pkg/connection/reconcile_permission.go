@@ -50,9 +50,9 @@ func (r *PulsarPermissionReconciler) Observe(ctx context.Context) error {
 	r.log.V(1).Info("Start Observe")
 
 	permissionList := &resourcev1alpha1.PulsarPermissionList{}
-	if err := r.conn.client.List(ctx, permissionList, client.InNamespace(r.conn.connection.Namespace),
+	if err := r.conn.client.List(ctx, permissionList,
 		client.MatchingFields(map[string]string{
-			".spec.connectionRef.name": r.conn.connection.Name,
+			".spec.connectionRef.name": r.conn.connection.Namespace + "/" + r.conn.connection.Name,
 		})); err != nil {
 		return fmt.Errorf("list permission [%w]. connection[%s]", err, r.conn.connection.Name)
 	}

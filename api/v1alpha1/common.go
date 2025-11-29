@@ -25,6 +25,18 @@ import (
 	"github.com/streamnative/pulsar-resources-operator/pkg/reconciler"
 )
 
+// PulsarConnectionRef is a reference to a PulsarConnection resource.
+// It supports cross-namespace references by optionally specifying a namespace.
+type PulsarConnectionRef struct {
+	// Name is the name of the PulsarConnection resource.
+	Name string `json:"name"`
+
+	// Namespace is the namespace of the PulsarConnection resource.
+	// If not set, the namespace of the referencing resource will be used.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
 // SecretKeyRef indicates a secret name and key
 type SecretKeyRef struct {
 	Name string `json:"name"`

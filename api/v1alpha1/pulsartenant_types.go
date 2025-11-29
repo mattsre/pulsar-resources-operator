@@ -36,7 +36,8 @@ type PulsarTenantSpec struct {
 
 	// ConnectionRef is the reference to the PulsarConnection resource
 	// used to connect to the Pulsar cluster for this tenant.
-	ConnectionRef corev1.LocalObjectReference `json:"connectionRef"`
+	// Use the optional Namespace field to reference a PulsarConnection in a different namespace.
+	ConnectionRef PulsarConnectionRef `json:"connectionRef"`
 
 	// AdminRoles is a list of roles that have administrative privileges for this tenant.
 	// These roles can perform actions like creating namespaces, topics, and managing permissions.
